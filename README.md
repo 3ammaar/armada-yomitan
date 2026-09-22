@@ -3,7 +3,7 @@
 Bottom-screen OCR + Yomitan + Anki for the AYN Thor (on Armada OS). Play a game on the top screen, tap text, get the
 dictionary entry (and Anki mining) on the bottom screen. It is currently only tested with Japanese dictionaries.
 
-> **⚠️ Disclaimer:** This project is written with very heavy use of AI. It is just a tool that I wanted to use personally, and I haven't overlooked much of the code written, but I've tested it on a fresh install of Armada and released it here in case anybody else can make use of it. 
+> **⚠️ Disclaimer:** This project was written with very heavy use of AI. It's just a tool I wanted for personal use, and I haven't reviewed much of the code, but I've tested it on a fresh install of Armada and released it here in case anyone else can make use of it.
 
 ## Install and run
 
