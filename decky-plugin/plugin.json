@@ -1,0 +1,11 @@
+{
+  "name": "armada-yomitan",
+  "author": "Amar",
+  "flags": ["root"],
+  "api_version": 1,
+  "publish": {
+    "tags": ["utility"],
+    "description": "Launch and stop armada-yomitan (bottom-screen OCR + Yomitan + Anki) without it being a Steam game.",
+    "image": ""
+  }
+}

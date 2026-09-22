@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en" translate="no"><head><meta charset="utf-8">
+<meta name="google" content="notranslate">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>armada-yomitan</title>
+<style>
+/* Sized for the Thor's bottom screen: about 472x411 CSS px at device scale 2.625. */
+:root{color-scheme:dark;--z:1.2;--sq:112px;--yomi-bg:#1e1e1e}   /* --yomi-bg: shown until Yomitan's page has painted */
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;overflow:hidden;background:#15171a;color:#e8e8e8;
+     font:16px/1.3 system-ui,"Noto Sans CJK JP","Noto Sans JP",sans-serif}
+header{display:flex;gap:6px;padding:4px 4px 0}
+button{font:inherit;color:#fff;border:0;border-radius:10px;height:56px;padding:0 10px;background:#2f6feb}
+button:active{filter:brightness(1.25)}
+button:disabled{opacity:.4}
+#scan{flex:1;min-width:0;font-size:18px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+button.small{flex:0 0 52px;padding:0;font-size:15px;font-weight:600;background:#3a3f47;
+             font-family:system-ui,"Noto Sans Symbols 2","DejaVu Sans",sans-serif}
+button.on{background:#2f6feb}
+#status{height:20px;padding:0 8px;color:#9aa;font-size:13px;line-height:20px;white-space:nowrap;
+        overflow:hidden;text-overflow:ellipsis}
+/* The touch preview square covers the bottom-right corner of the Yomitan frame; keep --sq and SQ in step. */
+#pv{position:absolute;right:0;bottom:0;width:var(--sq);height:var(--sq);z-index:2;pointer-events:none;
+    border:2px solid #4a4f57;border-radius:8px 0 0 0;overflow:hidden;background:#000}
+#pv img{width:100%;height:100%;display:block;object-fit:cover}
+.mark{position:absolute;pointer-events:none}
+#box{border:2px solid #00c800}
+#span{border:2px solid #ffc800}
+#tap{width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid #f33}
+#yw{flex:1;min-height:0;position:relative;overflow:hidden;margin-top:4px;background:var(--yomi-bg)}
+#yomi{position:absolute;left:0;top:0;border:0;background:var(--yomi-bg);
+      width:calc(100% / var(--z));height:calc(100% / var(--z));transform:scale(var(--z));transform-origin:0 0}
+.page{position:fixed;inset:0;display:flex;flex-direction:column;background:#15171a}
+#prefs{z-index:10}
+#overlay{z-index:20}
+.bar{display:flex;gap:6px;padding:4px}
+.bar button{flex:1}
+.rows{flex:1;min-height:0;overflow:auto;padding:0 4px 4px}
+.lbl small{display:block;color:#9aa;font-size:13px;line-height:1.2}
+button.pick{flex:0 0 104px;height:48px;padding:0 8px;font-size:15px;background:#3a3f47}
+#sources{z-index:15}
+#sstatus{padding:0 8px 6px;color:#9aa;font-size:14px}
+#smanual{flex-wrap:wrap;padding:0 8px 6px}
+#smanual .lbl{flex:1 0 100%}
+#snode{flex:1 1 0;min-width:0;box-sizing:border-box;height:48px;font-size:20px;text-align:center;background:#1b1e22;color:#eee;border:1px solid #3a3f47;border-radius:6px}
+.src{width:100%;height:auto;min-height:64px;margin-bottom:6px;text-align:left;padding:8px 12px;background:#2a2e33}
+.src.on{background:#2f6feb}
+.src .t{font-size:18px;font-weight:600}
+.src .s{font-size:13px;opacity:.8}
+.row{display:flex;align-items:center;gap:6px;min-height:60px;padding:2px 0;border-bottom:1px solid #2a2e33}
+.lbl{flex:1;min-width:0}
+#zval,#asval{min-width:66px;text-align:center;font-size:20px;font-weight:600}
+.seg{display:flex;gap:4px}
+.seg button{height:48px;padding:0 10px;font-size:14px;background:#3a3f47}
+.seg button.on{background:#2f6feb}
+#drawbtn{flex:0 0 136px}
+#ankiset{z-index:13}
+#ankibrowse{z-index:16}
+#astatus,#abstatus{padding:0 8px 6px;color:#9aa;font-size:14px}
+#apath{padding:0 8px 4px;color:#9aa;font-size:13px;word-break:break-all}
+#draw{z-index:12}
+#sysdeps{z-index:14}
+#sdinfo{padding:0 8px 6px;color:#9aa;font-size:14px}
+.sdm{padding:6px 8px;border-bottom:1px solid #2a2e33;font-size:14px}
+.sdm small{display:block;color:#9aa;font-size:12px}
+#sdlog{margin:4px 8px;font-size:12px;color:#9aa;white-space:pre-wrap;word-break:break-all;max-height:110px;overflow:auto}
+#dhelp{padding:0 8px 6px;color:#9aa;font-size:14px}
+#dwrap{position:relative;margin:0 4px;background:#000;border-radius:6px;overflow:hidden}
+#dimg{width:100%;display:block;min-height:96px}
+.area{position:absolute;border:2px solid #ffc800;background:rgba(255,200,0,.2)}
+.live{position:absolute;border:2px dashed #4fc3f7;background:rgba(79,195,247,.15)}
+button.wide{flex:1}
+#quit{background:#b3261e}
+#confirm{z-index:30;justify-content:center}
+#cq{padding:0 8px 12px;font-size:18px}
+#cno{background:#3a3f47}
+#settings{flex:1;min-height:0;width:100%;border:0;background:var(--yomi-bg)}
+</style></head><body>
+<header>
+  <button id="scan">@@PAGE_SCAN_SCREEN@@</button>
+  <button id="stop" class="small" disabled>@@PAGE_DONE@@</button>
+  <button id="anki" class="small" hidden>@@PAGE_ANKI@@</button>
+  <button id="cfg" class="small">&#x2699;</button>
+</header>
+<div id="status">@@PAGE_STARTING@@</div>
+<div id="yw"><iframe id="yomi" title="Yomitan"></iframe>
+  <div id="pv" hidden><img id="img" alt="">
+    <div id="span" class="mark"></div><div id="box" class="mark"></div><div id="tap" class="mark"></div></div>
+</div>
+
+<div id="prefs" class="page" hidden>
+  <div class="bar"><button id="pback">@@PAGE_BACK_TO_LOOKUP@@</button></div>
+  <div class="rows">
+    <div class="row"><div class="lbl">@@PAGE_YOMITAN_TEXT_SIZE@@</div>
+      <button id="zdown" class="small">A&minus;</button><div id="zval">1.20&times;</div>
+      <button id="zup" class="small">A+</button></div>
+    <div class="row"><div class="lbl">@@PAGE_SCANNING@@</div>
+      <div class="seg"><button id="m-screen">@@PAGE_WHOLE_SCREEN@@</button><button id="m-tap">@@PAGE_SINGLE_TAP@@</button><button id="m-manual">@@PAGE_MANUAL@@</button></div></div>
+    <div class="row" id="row-areas" hidden><div class="lbl">@@PAGE_OCR_AREAS@@<small id="areacount">@@PAGE_AREAS_NONE@@</small></div>
+      <button id="drawbtn" class="pick">@@PAGE_DRAW_AREAS@@</button></div>
+    <div class="row"><div class="lbl">@@PAGE_SCAN_DETAIL@@<small>@@PAGE_SCAN_DETAIL_HINT@@</small></div>
+      <div class="seg"><button id="d-fast">@@PAGE_DETAIL_FAST@@</button><button id="d-balanced">@@PAGE_DETAIL_BALANCED@@</button><button id="d-full">@@PAGE_DETAIL_FULL@@</button></div></div>
+    <div class="row"><div class="lbl">@@PAGE_SHOW_PREVIEW@@</div><button id="pvt" class="small">@@PAGE_OFF@@</button></div>
+    <div class="row"><div class="lbl">@@PAGE_TOP_SCREEN_SOURCE@@<small id="srcnow">@@PAGE_AUTOMATIC@@</small></div>
+      <button id="srcbtn" class="pick">@@PAGE_CHOOSE@@</button></div>
+    <div class="row"><div class="lbl">@@PAGE_ANKI_BUTTON@@<small>@@PAGE_ANKI_BUTTON_HINT@@</small></div><button id="ankit" class="small">@@PAGE_OFF@@</button></div>
+    <div class="row" id="row-anki" hidden><div class="lbl">@@PAGE_ANKI_LOCATION@@<small id="ankinow">@@PAGE_NOT_SET_UP@@</small></div>
+      <button id="areinstall" class="pick" hidden>@@PAGE_ANKI_REINSTALL@@</button>
+      <button id="ankiloc" class="pick">@@PAGE_CHANGE@@</button></div>
+    <div class="row" id="row-anki-size" hidden><div class="lbl">@@PAGE_ANKI_SIZE@@<small>@@PAGE_ANKI_SIZE_HINT@@</small></div>
+      <button id="asdown" class="small">&minus;</button><div id="asval">2.50&times;</div>
+      <button id="asup" class="small">+</button></div>
+    <div class="row"><div class="lbl">@@PAGE_SYSTEM_PACKAGES@@<small id="sdnow">@@PAGE_NOT_CHECKED_YET@@</small></div>
+      <button id="sdbtn" class="pick">@@PAGE_CHECK@@</button></div>
+    <div class="row"><button id="reinstall" class="wide">@@PAGE_REINSTALL@@</button></div>
+    <div class="row"><button id="yset" class="wide">@@PAGE_OPEN_YOMITAN_SETTINGS@@</button></div>
+    <div class="row"><button id="quit" class="wide">@@PAGE_QUIT@@</button></div>
+  </div>
+</div>
+
+<div id="confirm" class="page" hidden>
+  <div id="cq"></div>
+  <div class="bar"><button id="cyes">@@PAGE_YES@@</button><button id="cno">@@PAGE_NO@@</button></div>
+</div>
+
+<div id="draw" class="page" hidden>
+  <div class="bar"><button id="dfinish">@@PAGE_FINISH_DRAWING@@</button><button id="dclear" class="small">@@PAGE_CLEAR@@</button><button id="drefresh" class="small">&#x21BB;</button></div>
+  <div id="dhelp">@@PAGE_DRAW_HELP@@</div>
+  <div id="dwrap"><img id="dimg" alt=""><div id="dareas"></div></div>
+</div>
+
+<div id="sysdeps" class="page" hidden>
+  <div class="bar"><button id="sdlater">@@PAGE_BACK@@</button></div>
+  <div id="sdinfo">@@PAGE_SYSDEPS_CHECKING@@</div>
+  <div class="rows">
+    <div id="sdmissing"></div>
+    <div class="row"><button id="sdgo" class="wide">@@PAGE_INSTALL_THEM@@</button></div>
+    <div class="row" id="sdrebootrow" hidden><button id="sdreboot" class="wide">@@PAGE_RESTART_NOW@@</button></div>
+    <div id="sdlog"></div>
+  </div>
+</div>
+
+<div id="ankiset" class="page" hidden>
+  <div class="bar"><button id="asback">@@PAGE_BACK@@</button></div>
+  <div id="astatus">@@PAGE_ANKI_LOOKING@@</div>
+  <div class="rows">
+    <div id="afound"></div>
+    <div class="row"><button id="ainstall" class="wide">@@PAGE_ANKI_INSTALL@@</button></div>
+    <div class="row"><button id="abrowse" class="wide">@@PAGE_ANKI_BROWSE@@</button></div>
+    <div class="row" id="arow-cancel" hidden><button id="acancel" class="wide">@@PAGE_ANKI_CANCEL_INSTALL@@</button></div>
+  </div>
+</div>
+
+<div id="ankibrowse" class="page" hidden>
+  <div class="bar"><button id="abback">@@PAGE_BACK@@</button><button id="ause">@@PAGE_USE_THIS_FOLDER@@</button></div>
+  <div id="abstatus"></div>
+  <div id="apath"></div>
+  <div class="rows" id="alist"></div>
+</div>
+
+<div id="sources" class="page" hidden>
+  <div class="bar"><button id="sback">@@PAGE_BACK@@</button><button id="srefresh">@@PAGE_REFRESH@@</button></div>
+  <div id="sstatus"></div>
+  <div class="row" id="smanual"><div class="lbl">@@PAGE_NODE_NUMBER@@<small>@@PAGE_NODE_NUMBER_HINT@@</small></div>
+    <input id="snode" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" spellcheck="false" placeholder="0">
+    <button id="suse" class="pick">@@PAGE_USE@@</button></div>
+  <div class="rows" id="slist"></div>
+</div>
+
+<div id="overlay" class="page" hidden>
+  <div class="bar"><button id="back">@@PAGE_BACK_TO_SETTINGS@@</button></div>
+  <iframe id="settings" title="Yomitan settings"></iframe>
+</div>
+<script>
+const T = new URLSearchParams(location.search).get('t');
+const EXT = "__EXT__";
+const S = @@PAGE_SCRIPT_TEXTS@@;
+const fmt = (text, values) => text.replace(/\{(\w+)\}/g, (_, k) => values[k]);
+const $ = id => document.getElementById(id);
+const post = path => fetch(path, {method: 'POST', headers: {'X-Token': T}});
+let active = false, scanning = false, mode = 'screen', showPreview = false, drawing = false, areas = [];
+let sdDismissed = false, sdBusy = false;
+let zoom = 1.2, ankiScale = 2.5, haveCrop = false, lastReserve = null, ankiOn = false, ankiReady = false, ankiRunning = false, browsePath = '';
+const SQ = 112;                                             // the preview square in CSS px: same as --sq
+
+function reserve() {
+  const size = (showPreview && haveCrop) ? Math.round(SQ / zoom) : 0;
+  if (size === lastReserve) return;
+  const w = $('yomi').contentWindow;
+  if (!w) return;
+  lastReserve = size;
+  w.postMessage({armadaYomitan: 'reserve', size: size}, EXT);
+}
+$('yomi').onload = () => { lastReserve = null; reserve(); };  // every new page starts with no scroll room
+
+function buttons() {
+  const tap = mode === 'tap';
+  $('stop').hidden = tap;
+  $('stop').disabled = !active;
+  $('scan').disabled = tap && scanning;
+  $('scan').textContent = tap ? (scanning ? S.PAGE_READING : active ? S.PAGE_CANCEL : S.PAGE_TAP_A_WORD)
+                              : (active ? S.PAGE_SCAN_AGAIN : mode === 'manual' ? S.PAGE_SCAN_AREAS : S.PAGE_SCAN_SCREEN);
+}
+function applyPrefs(m) {
+  document.documentElement.style.setProperty('--z', m.yomi_zoom);
+  zoom = m.yomi_zoom;
+  $('zval').textContent = m.yomi_zoom.toFixed(2) + '\u00d7';
+  mode = m.mode; showPreview = m.show_preview;
+  $('m-screen').classList.toggle('on', mode === 'screen');
+  $('m-tap').classList.toggle('on', mode === 'tap');
+  $('m-manual').classList.toggle('on', mode === 'manual');
+  ankiOn = !!m.anki_button; ankiReady = !!m.anki_ready;
+  $('anki').hidden = !ankiOn;
+  ankiRunning = !!m.anki_running;
+  $('anki').classList.toggle('on', ankiRunning);
+  $('ankit').textContent = ankiOn ? S.PAGE_ON : S.PAGE_OFF;
+  $('ankit').classList.toggle('on', ankiOn);
+  $('row-anki').hidden = !ankiOn;
+  $('row-anki-size').hidden = !ankiOn;
+  ankiScale = m.anki_scale;
+  $('asval').textContent = ankiScale.toFixed(2) + '\u00d7';
+  $('ankinow').textContent = m.anki_label || S.PAGE_NOT_SET_UP;
+  $('areinstall').hidden = !(ankiOn && m.anki_own);
+  $('row-areas').hidden = mode !== 'manual';
+  areas = m.areas || [];
+  countAreas();
+  ['fast', 'balanced', 'full'].forEach(d => $('d-' + d).classList.toggle('on', m.scan_detail === d));
+  $('pvt').textContent = showPreview ? S.PAGE_ON : S.PAGE_OFF;
+  $('pvt').classList.toggle('on', showPreview);
+  $('reinstall').parentElement.hidden = !!m.via_decky;
+  $('srcnow').textContent = m.source || S.PAGE_AUTOMATIC;
+  $('snode').placeholder = m.node;
+  if (!showPreview) $('pv').hidden = true;
+  reserve();
+  buttons();
+}
+
+$('scan').onclick = () => post('/scan');
+$('stop').onclick = () => post('/stop');
+$('cfg').onclick = () => { $('prefs').hidden = false; };
+$('pback').onclick = () => {
+  $('prefs').hidden = true;
+  const y = $('yomi');                                      // reload so new dictionaries / settings apply
+  if (y.getAttribute('src')) y.src = y.src;
+};
+$('zdown').onclick = () => post('/zoom?d=-0.1');
+$('zup').onclick = () => post('/zoom?d=0.1');
+$('asdown').onclick = () => post('/pref?k=anki_scale&v=' + (ankiScale - 0.25));
+$('asup').onclick = () => post('/pref?k=anki_scale&v=' + (ankiScale + 0.25));
+$('m-screen').onclick = () => post('/pref?k=mode&v=screen');
+$('m-tap').onclick = () => post('/pref?k=mode&v=tap');
+$('m-manual').onclick = () => post('/pref?k=mode&v=manual');
+function openAnkiSetup() { $('ankiset').hidden = false; post('/anki_detect'); }
+$('anki').onclick = () => { if (ankiReady) post('/anki'); else openAnkiSetup(); };
+$('ankit').onclick = () => post('/pref?k=anki_button&v=' + (ankiOn ? '0' : '1'));
+$('ankiloc').onclick = openAnkiSetup;
+$('areinstall').onclick = () => {
+  $('areinstall').disabled = true;
+  fetch('/anki_update_check', {headers: {'X-Token': T}}).then(r => r.json()).then(d => {
+    $('areinstall').disabled = false;
+    ask(d.up_to_date ? S.PAGE_ANKI_REINSTALL_CONFIRM_LATEST : S.PAGE_ANKI_REINSTALL_CONFIRM_UPDATE, () => post('/anki_reinstall'));
+  });
+};
+$('asback').onclick = () => { $('ankiset').hidden = true; };
+$('ainstall').onclick = () => post('/anki_install');
+$('acancel').onclick = () => post('/anki_cancel');
+$('abrowse').onclick = () => browseTo('');
+$('abback').onclick = () => { $('ankibrowse').hidden = true; };
+$('ause').onclick = () => post('/anki_pick?path=' + encodeURIComponent(browsePath));
+$('drawbtn').onclick = () => post('/draw?on=' + (drawing ? '0' : '1'));
+$('dfinish').onclick = () => post('/draw?on=0');
+$('dclear').onclick = () => post('/areas_clear');
+$('drefresh').onclick = () => post('/draw_refresh');
+['fast', 'balanced', 'full'].forEach(d => { $('d-' + d).onclick = () => post('/pref?k=scan_detail&v=' + d); });
+$('pvt').onclick = () => post('/pref?k=show_preview&v=' + (showPreview ? '0' : '1'));
+$('srcbtn').onclick = () => { $('sources').hidden = false; post('/nodes'); };
+$('srefresh').onclick = () => post('/nodes');
+$('sback').onclick = () => { $('sources').hidden = true; };
+function useNode() {
+  const v = $('snode').value.trim();
+  if (!/^\d{1,9}$/.test(v)) { $('sstatus').textContent = S.PAGE_NODE_NOT_DIGITS; return; }
+  post('/node_manual?id=' + v);
+}
+$('suse').onclick = useNode;
+$('snode').addEventListener('keydown', e => { if (e.key === 'Enter') useNode(); });
+function screens(m) {
+  if (m.close) { $('sources').hidden = true; return; }
+  $('sstatus').textContent = m.status || '';
+  if (m.node !== undefined) $('snode').placeholder = m.node;
+  const list = $('slist'); list.textContent = '';
+  for (const it of (m.items || [])) {
+    const b = document.createElement('button'), t = document.createElement('div'), s = document.createElement('div');
+    b.className = 'src' + (it.current ? ' on' : ''); t.className = 't'; s.className = 's';
+    t.textContent = it.current ? fmt(S.PAGE_SOURCE_CURRENT, {label: it.label}) : it.label;
+    s.textContent = fmt(S.PAGE_SOURCE_DETAIL, {size: it.size, id: it.id});
+    b.append(t, s);
+    b.onclick = () => { post('/node?id=' + encodeURIComponent(it.id)); $('sources').hidden = true; };
+    list.append(b);
+  }
+}
+let kbdChecked = false;
+$('yset').onclick = () => {
+  const f = $('settings');
+  if (!f.getAttribute('src')) f.src = EXT + '/settings.html';
+  $('overlay').hidden = false;
+  setTimeout(() => {                                        // the keyboard helper inside that page says hello when it starts
+    const k = window.__armadaYomitanKbd;
+    if (k && !kbdChecked && !$('overlay').hidden && !k.heardFrom(f)) {
+      kbdChecked = true;
+      window.armadaYomitanKbdReport("Yomitan's settings page is open, but the keyboard helper in it hasn't reported in");
+    }
+  }, 6000);
+};
+$('back').onclick = () => { $('overlay').hidden = true; };
+window.armadaYomitanKbdReport = msg => post('/kbdlog?m=' + encodeURIComponent(String(msg).slice(0, 300)));
+
+$('quit').onclick = () => { post('/quit'); setTimeout(() => window.close(), 300); };
+function ask(text, onYes) {
+  $('cq').textContent = text;
+  $('cyes').onclick = () => { $('confirm').hidden = true; onYes(); };
+  $('cno').onclick = () => { $('confirm').hidden = true; };
+  $('confirm').hidden = false;
+}
+$('reinstall').onclick = () => ask(S.PAGE_REINSTALL_CONFIRM, () => post('/reinstall'));
+
+function join(dir, name) { return dir === '/' ? '/' + name : dir + '/' + name; }
+function listButton(title, sub, on, click) {
+  const b = document.createElement('button'), t = document.createElement('div'), s = document.createElement('div');
+  b.className = 'src' + (on ? ' on' : ''); t.className = 't'; s.className = 's';
+  t.textContent = title; s.textContent = sub;
+  b.append(t, s); b.onclick = click;
+  return b;
+}
+function browseTo(path) {
+  $('ankibrowse').hidden = false;
+  fetch('/fs?path=' + encodeURIComponent(path), {headers: {'X-Token': T}}).then(r => r.json()).then(showDir);
+}
+function showDir(d) {
+  browsePath = d.path;
+  $('apath').textContent = d.path;
+  const list = $('alist');
+  list.textContent = '';
+  if (d.parent !== null) list.append(listButton(S.PAGE_UP_ONE_FOLDER, d.parent, false, () => browseTo(d.parent)));
+  d.items.forEach(it => {
+    if (it.dir) list.append(listButton(fmt(S.PAGE_FOLDER, {name: it.name}), '', false, () => browseTo(join(d.path, it.name))));
+    else list.append(listButton(it.name, S.PAGE_PROGRAM_HINT, /anki/i.test(it.name),
+                                () => post('/anki_pick?path=' + encodeURIComponent(join(d.path, it.name)))));
+  });
+}
+function ankiMsg(m) {
+  if (m.status !== undefined) { $('astatus').textContent = m.status; $('abstatus').textContent = m.status; $('ankinow').textContent = m.status; }
+  if (m.found) {
+    const box = $('afound');
+    box.textContent = '';
+    m.found.forEach((label, i) => box.append(listButton(label, S.PAGE_USE_THIS_ONE, false, () => post('/anki_use?i=' + i))));
+  }
+  if (m.busy !== undefined) {
+    $('ainstall').disabled = m.busy; $('abrowse').disabled = m.busy; $('arow-cancel').hidden = !m.busy;
+    $('areinstall').disabled = m.busy; $('ankiloc').disabled = m.busy;
+  }
+  if (m.done) { $('ankiset').hidden = true; $('ankibrowse').hidden = true; }
+}
+function sdMsg(m) {
+  if (m.missing !== undefined) {
+    const box = $('sdmissing');
+    box.textContent = '';
+    m.missing.forEach(x => {
+      const d = document.createElement('div');
+      d.className = 'sdm';
+      d.textContent = x.label;
+      const s = document.createElement('small');
+      s.textContent = (x.optional ? S.PAGE_PACKAGE_OPTIONAL : S.PAGE_PACKAGE_NEEDED) + (x.packages.length ? fmt(S.PAGE_PACKAGE_NAMES, {packages: x.packages.join(', ')}) : '');
+      d.append(s);
+      box.append(d);
+    });
+    const needed = m.missing.filter(x => !x.optional).length;
+    $('sdnow').textContent = !m.missing.length ? S.PAGE_PACKAGES_ALL_PRESENT
+      : needed ? fmt(S.PAGE_PACKAGES_NEEDED, {needed: needed, optional: m.missing.length - needed})
+               : fmt(S.PAGE_PACKAGES_OPTIONAL_ONLY, {optional: m.missing.length});
+    $('sdgo').hidden = !(m.packages && m.packages.length);
+  }
+  if (m.status !== undefined) $('sdinfo').textContent = m.status;
+  if (m.busy !== undefined) { sdBusy = m.busy; $('sdgo').disabled = m.busy; }
+  if (m.needs_reboot !== undefined) { $('sdrebootrow').hidden = !m.needs_reboot; if (m.needs_reboot) $('sdgo').hidden = true; }
+  if (m.line) { const l = $('sdlog'); l.textContent += m.line + '\n'; l.scrollTop = l.scrollHeight; }
+  if (m.show && !sdDismissed) $('sysdeps').hidden = false;
+}
+function countAreas() {
+  $('areacount').textContent = areas.length ? fmt(areas.length === 1 ? S.PAGE_AREAS_ONE : S.PAGE_AREAS_MANY, {count: areas.length}) : S.PAGE_AREAS_NONE;
+}
+function rectBox(cls, r) {                                  // r: [left, top, right, bottom] as fractions
+  const d = document.createElement('div');
+  d.className = cls;
+  d.style.left = (100 * r[0]) + '%'; d.style.top = (100 * r[1]) + '%';
+  d.style.width = (100 * (r[2] - r[0])) + '%'; d.style.height = (100 * (r[3] - r[1])) + '%';
+  return d;
+}
+function showAreas(list, live) {
+  const box = $('dareas');
+  box.textContent = '';
+  list.forEach(r => box.append(rectBox('area', r)));
+  if (live) box.append(rectBox('live', live)); else { areas = list; countAreas(); }
+}
+function setDrawing(on) {
+  drawing = on;
+  $('draw').hidden = !on;
+  $('drawbtn').textContent = on ? S.PAGE_FINISH_DRAWING : S.PAGE_DRAW_AREAS;
+}
+function place(el, b, cw, ch) {
+  el.style.left = (100 * b[0] / cw) + '%'; el.style.top = (100 * b[1] / ch) + '%';
+  el.style.width = (100 * b[2] / cw) + '%'; el.style.height = (100 * b[3] / ch) + '%';
+}
+function preview(m, found) {
+  if (!showPreview || m.crop === undefined) return;
+  $('pv').hidden = false; haveCrop = true;
+  $('img').src = '/crop/' + m.crop + '.png?t=' + T;
+  $('tap').style.left = (100 * m.tap[0] / m.cw) + '%';
+  $('tap').style.top = (100 * m.tap[1] / m.ch) + '%';
+  $('box').hidden = $('span').hidden = !found;
+  if (found) { place($('box'), m.box, m.cw, m.ch); place($('span'), m.span, m.cw, m.ch); }
+  reserve();
+}
+function hit(m) {
+  preview(m, true);
+  $('yomi').src = EXT + '/search.html?query=' + encodeURIComponent(m.query);
+}
+const es = new EventSource('/events?t=' + T);
+es.onmessage = e => {
+  const m = JSON.parse(e.data);
+  if (m.type === 'status') $('status').textContent = m.text;
+  else if (m.type === 'state') { active = m.active; scanning = m.scanning; mode = m.mode; buttons(); }
+  else if (m.type === 'prefs') applyPrefs(m);
+  else if (m.type === 'nodes') screens(m);
+  else if (m.type === 'draw') setDrawing(m.on);
+  else if (m.type === 'anki') ankiMsg(m);
+  else if (m.type === 'sysdeps') sdMsg(m);
+  else if (m.type === 'mirror') $('dimg').src = '/crop/' + m.crop + '.jpg?t=' + T;
+  else if (m.type === 'areas') showAreas(m.areas, m.live);
+  else if (m.type === 'hit') hit(m);
+  else if (m.type === 'nohit') preview(m, false);
+};
+$('sdgo').onclick = () => {
+  $('sdlog').textContent = '';
+  post('/sysdeps_install');
+};
+$('sdreboot').onclick = () => post('/sysdeps_reboot');
+$('sdlater').onclick = () => { sdDismissed = true; $('sysdeps').hidden = true; };
+$('sdbtn').onclick = () => { sdDismissed = false; $('sysdeps').hidden = false; post('/sysdeps_check'); };
+es.onerror = () => { $('status').textContent = S.PAGE_LOST_CONTACT; };
+buttons();
+$('yomi').src = EXT + '/search.html';
+</script><!--ARMADA_YOMITAN_KBD--></body></html>

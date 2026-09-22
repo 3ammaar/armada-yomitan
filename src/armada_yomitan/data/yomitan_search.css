@@ -1,0 +1,12 @@
+:root {
+  --entry-horizontal-padding: 0.3em !important;
+  --entry-vertical-padding: 4px !important;
+}
+html, body { margin: 0 !important; }
+#intro, .search-options, .search-textbox-container { display: none !important; }
+#query-parser-container, #query-parser-content { display: none !important; }
+
+.content-outer, .content, .content-scroll, .content-body, .content-body-inner {
+  padding-left: 0 !important; padding-right: 0 !important;
+  margin-left: 0 !important; margin-right: 0 !important;
+}

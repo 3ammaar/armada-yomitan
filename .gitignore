@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.venv/
+*.orig
+node_modules/
+dist/
+CLAUDE.md
+docs/
+.ruff_cache/

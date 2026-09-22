@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "armada-yomitan"
+dynamic = ["version"]
+description = "Bottom-screen OCR + Yomitan + Anki for the AYN Thor (Armada OS)"
+readme = "README.md"
+requires-python = ">=3.13"
+# Nothing is required to *run* it: the app is standard library only. RapidOCR, ONNX Runtime and Playwright are installed by
+# `armada-yomitan --setup` into its own virtual environment under ~/.local/share/armada-yomitan (see armada_yomitan/installer.py).
+dependencies = []
+
+[project.scripts]
+armada-yomitan = "armada_yomitan.entry:main"
+
+[tool.hatch.version]
+path = "src/armada_yomitan/__init__.py"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/armada_yomitan"]      # the data/ folder (page, keyboard script, Anki add-on...) is included with it
+
+[tool.ruff]
+line-length = 160
+target-version = "py313"
+# tests are plain scripts; data/ holds the assets, which are written out byte for byte and must never be reformatted.
+extend-exclude = ["tests", "src/armada_yomitan/data"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = ["E701", "E731", "E741"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/armada_yomitan/yomitan/patch.py" = ["E501"]      # YOMITAN_KEY is one long public key
+"src/armada_yomitan/gtk_ui.py" = ["I001"]      # a function-local import kept in the order it always had
