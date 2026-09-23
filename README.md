@@ -7,7 +7,7 @@ dictionary entry (and Anki mining) on the bottom screen. It is currently only te
 
 ## Install and run
 
-1. Download `armada-yomitan-decky.zip` onto your device.
+1. Download `armada-yomitan-decky.zip` onto your device (either build it or download it from [Releases](https://github.com/3ammaar/armada-yomitan/releases/tag/0.1.0)).
 2. Enter Decky settings on your device, enable developer mode from **General -> Other**, then **Install Plugin from ZIP File** under the developer settings. Navigate to and select `armada-yomitan-decky.zip` to install it.
 3. Open Decky's menu, select **Armada OCR Yomitan**, then tap **Install System Dependencies** and confirm to install packages related to OCR and Chromium, as well as the latest release of Yomitan.
 4. Restart the device. On a first install this is mandatory.
